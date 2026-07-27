@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react"
-import type { Property, PropertyInput, PropertyStatus } from "@/types"
+import type { Property, PropertyInput, PropertyStatus, Interaction } from "@/types"
 import { STATUS_OPTIONS } from "@/types"
 import { X, Loader2 } from "lucide-react"
+import { InteractionLog } from "@/components/InteractionLog"
 
 interface PropertyFormProps {
   property?: Property | null
@@ -21,6 +22,7 @@ const emptyForm: PropertyInput = {
   status: "pendiente",
   notes: "",
   url: "",
+  interactions: [],
 }
 
 export function PropertyForm({ property, onSave, onClose }: PropertyFormProps) {
@@ -47,6 +49,7 @@ export function PropertyForm({ property, onSave, onClose }: PropertyFormProps) {
         status: property.status,
         notes: property.notes,
         url: property.url,
+        interactions: property.interactions ?? [],
       })
     }
   }, [property])
@@ -72,7 +75,7 @@ export function PropertyForm({ property, onSave, onClose }: PropertyFormProps) {
     }
   }
 
-  const update = (field: keyof PropertyInput, value: string | number) =>
+  const update = (field: keyof PropertyInput, value: string | number | Interaction[]) =>
     setForm((prev) => ({ ...prev, [field]: value }))
 
   const inputClass =
@@ -287,6 +290,13 @@ export function PropertyForm({ property, onSave, onClose }: PropertyFormProps) {
               placeholder="Qué te gustó, qué no, detalles del barrio…"
               rows={3}
               className={`${inputClass} resize-none min-h-[80px]`}
+            />
+          </div>
+
+          <div className="border-t border-zinc-800 pt-4">
+            <InteractionLog
+              interactions={form.interactions}
+              onChange={(interactions: Interaction[]) => update("interactions", interactions)}
             />
           </div>
 

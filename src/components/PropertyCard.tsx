@@ -1,6 +1,6 @@
 import type { Property, PropertyStatus } from "@/types"
 import { STATUS_OPTIONS } from "@/types"
-import { Pencil, Trash2, ExternalLink, BedDouble, Bath, Maximize2, DollarSign } from "lucide-react"
+import { Pencil, Trash2, ExternalLink, BedDouble, Bath, Maximize2, DollarSign, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface PropertyCardProps {
@@ -10,8 +10,27 @@ interface PropertyCardProps {
   onStatusChange: (id: string, status: PropertyStatus) => void
 }
 
+function timeAgo(dateStr: string): string {
+  const now = new Date()
+  const date = new Date(dateStr)
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffH = Math.floor(diffMin / 60)
+  const diffD = Math.floor(diffH / 24)
+
+  if (diffMin < 1) return "ahora"
+  if (diffMin < 60) return `hace ${diffMin}m`
+  if (diffH < 24) return `hace ${diffH}h`
+  if (diffD < 7) return `hace ${diffD}d`
+  return date.toLocaleDateString("es-AR", { day: "numeric", month: "short" })
+}
+
 export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: PropertyCardProps) {
   const status = STATUS_OPTIONS.find((s) => s.value === property.status)
+  const interactions = property.interactions ?? []
+  const lastInteraction = interactions.length > 0
+    ? [...interactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(amount)
@@ -23,7 +42,7 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
           <h3 className="font-semibold text-zinc-100 truncate text-balance">{property.title}</h3>
           <p className="text-sm text-zinc-400 truncate">{property.address}</p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <label htmlFor={`status-${property.id}`} className="sr-only">
             Estado de {property.title}
           </label>
@@ -71,6 +90,18 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
           <span className="tabular-nums">{property.bathrooms}&nbsp;baños</span>
         </div>
       </div>
+
+      {interactions.length > 0 && (
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+          <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>
+            {interactions.length}&nbsp;{interactions.length === 1 ? "interacción" : "interacciones"}
+          </span>
+          {lastInteraction && (
+            <span className="text-zinc-600">·&nbsp;{timeAgo(lastInteraction.date)}</span>
+          )}
+        </div>
+      )}
 
       {property.notes && (
         <p className="text-xs text-zinc-500 line-clamp-2 border-t border-zinc-800 pt-2 break-words">{property.notes}</p>
