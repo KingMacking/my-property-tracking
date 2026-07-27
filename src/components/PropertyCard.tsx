@@ -17,7 +17,7 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(amount)
 
   return (
-    <article className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 sm:p-4 space-y-2.5 sm:space-y-3 hover:border-zinc-700 transition-colors duration-200">
+    <article className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 sm:p-4 space-y-2.5 sm:space-y-3 hover:border-zinc-700 transition-colors duration-200 overflow-hidden">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-zinc-100 truncate text-balance">{property.title}</h3>
@@ -52,7 +52,7 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
           <DollarSign className="w-4 h-4 text-zinc-500 shrink-0" aria-hidden="true" />
           <span className="font-semibold tabular-nums truncate">{formatCurrency(property.price)}</span>
           {property.expenses > 0 && (
-            <span className="text-zinc-500 text-xs tabular-nums whitespace-nowrap">+&nbsp;{formatCurrency(property.expenses)}&nbsp;exp.</span>
+            <span className="text-zinc-500 text-xs tabular-nums">+&nbsp;{formatCurrency(property.expenses)}&nbsp;exp.</span>
           )}
         </div>
       </div>
