@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/propertycard.tsx","./src/components/propertyfilters.tsx","./src/components/propertyform.tsx","./src/lib/storage.ts","./src/lib/supabase.ts","./src/lib/utils.ts"],"version":"5.8.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/propertycard.tsx","./src/components/propertyfilters.tsx","./src/components/propertyform.tsx","./src/lib/supabase.ts","./src/lib/utils.ts"],"version":"5.8.3"}

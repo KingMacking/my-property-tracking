@@ -1,34 +1,67 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import type { Property, PropertyInput, PropertyStatus } from "@/types"
 import { supabase } from "@/lib/supabase"
 import { PropertyCard } from "@/components/PropertyCard"
 import { PropertyForm } from "@/components/PropertyForm"
 import { PropertyFilters } from "@/components/PropertyFilters"
-import { Plus, Home, Loader2 } from "lucide-react"
+import { Plus, Home, Loader2, X, AlertTriangle } from "lucide-react"
+
+function getFiltersFromURL(): { search: string; status: PropertyStatus | "todos" } {
+  const params = new URLSearchParams(window.location.search)
+  const search = params.get("q") ?? ""
+  const status = (params.get("status") as PropertyStatus | "todos") ?? "todos"
+  return { search, status }
+}
+
+function setFiltersToURL(search: string, status: PropertyStatus | "todos") {
+  const params = new URLSearchParams()
+  if (search) params.set("q", search)
+  if (status !== "todos") params.set("status", status)
+  const qs = params.toString()
+  const url = qs ? `?${qs}` : window.location.pathname
+  window.history.replaceState(null, "", url)
+}
 
 export default function App() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Property | null>(null)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<PropertyStatus | "todos">("todos")
+  const [deleting, setDeleting] = useState<Property | null>(null)
+  const [search, setSearch] = useState(() => getFiltersFromURL().search)
+  const [statusFilter, setStatusFilter] = useState<PropertyStatus | "todos">(
+    () => getFiltersFromURL().status
+  )
 
   useEffect(() => {
     fetchProperties()
   }, [])
 
   const fetchProperties = async () => {
+    setFetchError(null)
     const { data, error } = await supabase
       .from("properties")
       .select("*")
       .order("created_at", { ascending: false })
 
-    if (!error && data) {
+    if (error) {
+      setFetchError("No se pudieron cargar las propiedades. Revisá tu conexión.")
+    } else if (data) {
       setProperties(data as Property[])
     }
     setLoading(false)
   }
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value)
+    setFiltersToURL(value, statusFilter)
+  }, [statusFilter])
+
+  const handleStatusFilterChange = useCallback((value: PropertyStatus | "todos") => {
+    setStatusFilter(value)
+    setFiltersToURL(search, value)
+  }, [search])
 
   const handleSave = async (data: PropertyInput) => {
     const now = new Date().toISOString()
@@ -38,11 +71,10 @@ export default function App() {
         .update({ ...data, updated_at: now })
         .eq("id", editing.id)
 
-      if (!error) {
-        setProperties((prev) =>
-          prev.map((p) => (p.id === editing.id ? { ...p, ...data, updated_at: now } : p))
-        )
-      }
+      if (error) throw error
+      setProperties((prev) =>
+        prev.map((p) => (p.id === editing.id ? { ...p, ...data, updated_at: now } : p))
+      )
     } else {
       const { data: inserted, error } = await supabase
         .from("properties")
@@ -50,7 +82,8 @@ export default function App() {
         .select()
         .single()
 
-      if (!error && inserted) {
+      if (error) throw error
+      if (inserted) {
         setProperties((prev) => [inserted as Property, ...prev])
       }
     }
@@ -58,12 +91,13 @@ export default function App() {
     setEditing(null)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Eliminar esta propiedad?")) return
-    const { error } = await supabase.from("properties").delete().eq("id", id)
+  const handleDelete = async () => {
+    if (!deleting) return
+    const { error } = await supabase.from("properties").delete().eq("id", deleting.id)
     if (!error) {
-      setProperties((prev) => prev.filter((p) => p.id !== id))
+      setProperties((prev) => prev.filter((p) => p.id !== deleting.id))
     }
+    setDeleting(null)
   }
 
   const handleStatusChange = async (id: string, status: PropertyStatus) => {
@@ -110,48 +144,59 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-3 safe-area">
+        <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" aria-hidden="true" />
+        <p className="text-sm text-zinc-500" aria-live="polite">Cargando propiedades…</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950 safe-area">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-              <Home className="w-6 h-6" />
+            <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2 text-balance">
+              <Home className="w-6 h-6" aria-hidden="true" />
               Property Tracker
             </h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              {stats.total} propiedades
-              {stats.interested > 0 && ` · ${stats.interested} interesantes`}
-              {stats.visited > 0 && ` · ${stats.visited} visitadas`}
+            <p className="text-sm text-zinc-500 mt-1 tabular-nums" aria-live="polite">
+              {stats.total}&nbsp;propiedades
+              {stats.interested > 0 && <> · {stats.interested}&nbsp;interesantes</>}
+              {stats.visited > 0 && <> · {stats.visited}&nbsp;visitadas</>}
             </p>
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors"
+            className="flex items-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2.5 min-h-[44px] rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors duration-150 touch-manipulation"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Agregar
           </button>
-        </div>
+        </header>
+
+        {fetchError && (
+          <div role="alert" className="mb-6 text-sm text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg px-4 py-3 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            {fetchError}
+            <button onClick={fetchProperties} className="ml-auto underline hover:no-underline">
+              Reintentar
+            </button>
+          </div>
+        )}
 
         <div className="mb-6">
           <PropertyFilters
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={handleSearchChange}
             statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            onStatusFilterChange={handleStatusFilterChange}
           />
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <Home className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+          <div className="text-center py-20" role="status">
+            <Home className="w-12 h-12 text-zinc-700 mx-auto mb-4" aria-hidden="true" />
             <p className="text-zinc-500 text-sm">
               {properties.length === 0
                 ? "No tenés propiedades guardadas. ¡Agregá una!"
@@ -165,7 +210,10 @@ export default function App() {
                 key={property.id}
                 property={property}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={(id) => {
+                  const prop = properties.find((p) => p.id === id)
+                  if (prop) setDeleting(prop)
+                }}
                 onStatusChange={handleStatusChange}
               />
             ))}
@@ -173,7 +221,43 @@ export default function App() {
         )}
       </div>
 
-      {showForm && <PropertyForm property={editing} onSave={handleSave} onClose={handleCloseForm} />}
+      {showForm && (
+        <PropertyForm property={editing} onSave={handleSave} onClose={handleCloseForm} />
+      )}
+
+      {deleting && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirmar eliminación"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDeleting(null)
+          }}
+        >
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm p-6 text-center">
+            <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" aria-hidden="true" />
+            <h2 className="text-lg font-semibold text-zinc-100 mb-1">¿Eliminar propiedad?</h2>
+            <p className="text-sm text-zinc-400 mb-6">
+              Se eliminará <strong className="text-zinc-200">{deleting.title}</strong>. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleting(null)}
+                className="flex-1 px-4 py-2.5 min-h-[44px] text-sm text-zinc-400 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition-colors duration-150 touch-manipulation"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2.5 min-h-[44px] text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-500 transition-colors duration-150 touch-manipulation"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

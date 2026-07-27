@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 :root {
+  color-scheme: dark;
   --background: #09090b;
   --foreground: #fafafa;
   --card: #18181b;
@@ -26,8 +27,42 @@ body {
   color: var(--foreground);
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: contain;
 }
 
 input, textarea, select, button {
   font-family: inherit;
+}
+
+/* Focus-visible ring for all interactive elements */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Tabular nums for all number displays */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text balance for headings */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Safe area for mobile notches */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }

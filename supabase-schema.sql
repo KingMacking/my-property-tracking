@@ -18,8 +18,27 @@ CREATE TABLE IF NOT EXISTS properties (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Allow anyone (authenticated or anon) to read/write
--- Since this is a personal app shared between 2 people, simple open RLS is fine.
+-- Auto-update updated_at on row modification
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON properties
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Expose table to Data API (anon role)
+GRANT SELECT, INSERT, UPDATE, DELETE ON properties TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON properties TO authenticated;
+
+-- Row Level Security
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can read properties" ON properties
@@ -29,7 +48,8 @@ CREATE POLICY "Anyone can insert properties" ON properties
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Anyone can update properties" ON properties
-  FOR UPDATE USING (true);
+  FOR UPDATE USING (true)
+  WITH CHECK (true);
 
 CREATE POLICY "Anyone can delete properties" ON properties
   FOR DELETE USING (true);
