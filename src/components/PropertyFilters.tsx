@@ -43,7 +43,12 @@ export function PropertyFilters({
           </button>
         )}
       </div>
-      <div className="flex gap-2 flex-wrap" role="group" aria-label="Filtrar por estado">
+      <div
+        className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1"
+        role="group"
+        aria-label="Filtrar por estado"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
         <button
           onClick={() => onStatusFilterChange("todos")}
           aria-pressed={statusFilter === "todos"}

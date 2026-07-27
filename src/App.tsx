@@ -153,14 +153,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <header className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-100 flex items-center gap-2 text-balance">
-              <Home className="w-6 h-6" aria-hidden="true" />
-              Property Tracker
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <header className="flex items-start sm:items-center justify-between gap-3 mb-8">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 flex items-center gap-2 text-balance">
+              <Home className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" aria-hidden="true" />
+              <span className="truncate">Property Tracker</span>
             </h1>
-            <p className="text-sm text-zinc-500 mt-1 tabular-nums" aria-live="polite">
+            <p className="text-xs sm:text-sm text-zinc-500 mt-1 tabular-nums" aria-live="polite">
               {stats.total}&nbsp;propiedades
               {stats.interested > 0 && <> · {stats.interested}&nbsp;interesantes</>}
               {stats.visited > 0 && <> · {stats.visited}&nbsp;visitadas</>}
@@ -168,7 +168,7 @@ export default function App() {
           </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2.5 min-h-[44px] rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors duration-150 touch-manipulation"
+            className="shrink-0 flex items-center gap-2 bg-zinc-100 text-zinc-900 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors duration-150 touch-manipulation"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             Agregar
@@ -227,7 +227,7 @@ export default function App() {
 
       {deleting && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Confirmar eliminación"
@@ -235,7 +235,7 @@ export default function App() {
             if (e.target === e.currentTarget) setDeleting(null)
           }}
         >
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm p-6 text-center">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-t-xl sm:rounded-xl w-full max-w-sm p-6 text-center">
             <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-zinc-100 mb-1">¿Eliminar propiedad?</h2>
             <p className="text-sm text-zinc-400 mb-6">

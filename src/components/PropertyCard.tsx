@@ -17,7 +17,7 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(amount)
 
   return (
-    <article className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-3 hover:border-zinc-700 transition-colors duration-200">
+    <article className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 sm:p-4 space-y-2.5 sm:space-y-3 hover:border-zinc-700 transition-colors duration-200">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-zinc-100 truncate text-balance">{property.title}</h3>
@@ -47,17 +47,17 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-sm text-zinc-300">
-        <div className="flex items-center gap-1">
-          <DollarSign className="w-4 h-4 text-zinc-500" aria-hidden="true" />
-          <span className="font-semibold tabular-nums">{formatCurrency(property.price)}</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-300">
+        <div className="flex items-center gap-1 min-w-0">
+          <DollarSign className="w-4 h-4 text-zinc-500 shrink-0" aria-hidden="true" />
+          <span className="font-semibold tabular-nums truncate">{formatCurrency(property.price)}</span>
           {property.expenses > 0 && (
-            <span className="text-zinc-500 text-xs tabular-nums">+&nbsp;{formatCurrency(property.expenses)}&nbsp;exp.</span>
+            <span className="text-zinc-500 text-xs tabular-nums whitespace-nowrap">+&nbsp;{formatCurrency(property.expenses)}&nbsp;exp.</span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-sm text-zinc-400">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-400">
         <div className="flex items-center gap-1">
           <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
           <span className="tabular-nums">{property.area}&nbsp;m²</span>
@@ -76,7 +76,7 @@ export function PropertyCard({ property, onEdit, onDelete, onStatusChange }: Pro
         <p className="text-xs text-zinc-500 line-clamp-2 border-t border-zinc-800 pt-2 break-words">{property.notes}</p>
       )}
 
-      <div className="flex items-center gap-1 pt-1 border-t border-zinc-800">
+      <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-zinc-800">
         <button
           onClick={() => onEdit(property)}
           aria-label={`Editar ${property.title}`}
